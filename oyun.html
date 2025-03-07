@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5. Sınıf Konu Yarışması</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+        }
+        #oyun-alani {
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .soru {
+            font-size: 1.2em;
+            margin: 20px 0;
+        }
+        .secenek {
+            background-color: #e0f7fa;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            width: 45%;
+        }
+        .secenek:hover {
+            background-color: #81d4fa;
+        }
+        #puan {
+            font-size: 1.5em;
+            color: #1565c0;
+        }
+        #geri-sayim {
+            font-size: 1.2em;
+            color: #d32f2f;
+            margin: 10px;
+        }
+        .gizli {
+            display: none;
+        }
+        .sonuc {
+            font-size: 1.2em;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="oyun-alani">
+        <div id="baslangic">
+            <h1>5. Sınıf Konu Yarışması 📚</h1>
+            <button onclick="oyunuBaslat()" class="secenek">Oyuna Başla!</button>
+        </div>
+        
+        <div id="soru-alani" class="gizli">
+            <div id="puan">Puan: 0</div>
+            <div id="geri-sayim">Kalan Süre: 10</div>
+            <div class="soru" id="soru-metni"></div>
+            <div class="secenekler" id="secenekler"></div>
+        </div>
+        
+        <div id="sonuc" class="gizli sonuc">
+            <h2>Oyun Bitti! 🎉</h2>
+            <p id="toplam-puan"></p>
+            <button onclick="tekrarOyna()" class="secenek">Tekrar Oyna</button>
+        </div>
+    </div>
+
+    <script>
+        const sorular = [
+            // Fen Bilimleri - Hücre ve Organelleri
+            {
+                ders: "Fen Bilimleri",
+                konu: "Hücre ve Organelleri",
+                soru: "Hücrenin enerji üretiminden sorumlu organel hangisidir?",
+                secenekler: ["Ribozom", "Mitokondri", "Golgi Cisimciği", "Kloroplast"],
+                cevap: "Mitokondri"
+            },
+            // Türkçe - Sıfatlar
+            {
+                ders: "Türkçe",
+                konu: "Sıfatlar",
+                soru: "Aşağıdaki cümlede altı çizili sözcük hangi tür sıfattır?\n\nGökyüzünde **parlak** bir ay vardı.",
+                secenekler: ["Belirtme sıfatı", "Nitelendirme sıfatı", "Sayı sıfatı", "Soru sıfatı"],
+                cevap: "Nitelendirme sıfatı"
+            },
+            // Matematik - Çarpma İşlemi
+            {
+                ders: "Matematik",
+                konu: "Çarpma İşlemi",
+                soru: "12 x 15 işleminin sonucu kaçtır?",
+                secenekler: ["150", "170", "180", "200"],
+                cevap: "180"
+            },
+            // Sosyal Bilgiler - Demokrasi ve Cumhuriyet
+            {
+                ders: "Sosyal Bilgiler",
+                konu: "Demokrasi ve Cumhuriyet",
+                soru: "Cumhuriyet sisteminin temel özelliğini aşağıdakilerden hangisi ifade eder?",
+                secenekler: [
+                    "Kralın ülkeyi yönetmesi",
+                    "Cumhurbaşkanı'nın halk tarafından seçilmesi",
+                    "Din liderlerinin devlet işlerine karışması",
+                    "Toprakların eşitsiz dağıtılması"
+                ],
+                cevap: "Cumhurbaşkanı'nın halk tarafından seçilmesi"
+            },
+            // İngilizce - My Daily Routine
+            {
+                ders: "İngilizce",
+                konu: "My Daily Routine",
+                soru: "I ___ breakfast at 8 o'clock every morning.\nCümlesinde boş bırakılan yere hangi kelime gelmelidir?",
+                secenekler: ["has", "have", "eat", "do"],
+                cevap: "have"
+            }
+        ];
+
+        let puan = 0;
+        let suankiSoru = 0;
+        let geriSayim;
+        let zaman = 10;
+
+        function oyunuBaslat() {
+            document.getElementById('baslangic').classList.add('gizli');
+            document.getElementById('soru-alani').classList.remove('gizli');
+            puan = 0;
+            suankiSoru = 0;
+            sonrakiSoru();
+        }
+
+        function sonrakiSoru() {
+            zaman = 10;
+            clearInterval(geriSayim);
+            geriSayimBaslat();
+
+            if (suankiSoru >= sorular.length) {
+                oyunuBitir();
+                return;
+            }
+
+            const soru = sorular[suankiSoru];
+            document.getElementById('soru-metni').innerHTML = 
+                `<strong>${soru.ders} - ${soru.konu}</strong><br><br>${soru.soru}`;
+            
+            document.getElementById('secenekler').innerHTML = '';
+
+            soru.secenekler.forEach(secenek => {
+                const button = document.createElement('button');
+                button.className = 'secenek';
+                button.textContent = secenek;
+                button.onclick = () => cevapKontrol(secenek === soru.cevap);
+                document.getElementById('secenekler').appendChild(button);
+            });
+        }
+
+        function geriSayimBaslat() {
+            geriSayim = setInterval(() => {
+                zaman--;
+                document.getElementById('geri-sayim').textContent = `Kalan Süre: ${zaman}`;
+                
+                if (zaman <= 0) {
+                    clearInterval(geriSayim);
+                    zamanDoldu();
+                }
+            }, 1000);
+        }
+
+        function zamanDoldu() {
+            puan -= 10;
+            document.getElementById('puan').textContent = `Puan: ${puan}`;
+            sonrakiSoru();
+        }
+
+        function cevapKontrol(dogruMu) {
+            clearInterval(geriSayim);
+            
+            if (dogruMu) {
+                puan += 20;
+                alert('Doğru! 🎉 +20 Puan');
+            } else {
+                puan -= 5;
+                alert('Yanlış! ❌ -5 Puan');
+            }
+
+            document.getElementById('puan').textContent = `Puan: ${puan}`;
+            suankiSoru++;
+            sonrakiSoru();
+        }
+
+        function oyunuBitir() {
+            clearInterval(geriSayim);
+            document.getElementById('soru-alani').classList.add('gizli');
+            document.getElementById('sonuc').classList.remove('gizli');
+            document.getElementById('toplam-puan').textContent = `Toplam Puanınız: ${puan}`;
+        }
+
+        function tekrarOyna() {
+            document.getElementById('sonuc').classList.add('gizli');
+            document.getElementById('baslangic').classList.remove('gizli');
+        }
+    </script>
+</body>
+</html>
